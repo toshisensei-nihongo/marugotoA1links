@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>まるごとA1リンク</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      background-color: #eef2f6;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #1f2937;
+    }
+    /* カスタムスクロールバー（スマホ枠内のスクロール用） */
+    .phone-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .phone-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="p-3 sm:p-5 select-none sm:select-auto">
+
+  <!-- スマホ画面風メインカード（幅420px〜460px、角丸24px、シャドウ付き） -->
+  <div class="w-full max-w-[440px] h-[84vh] min-h-[600px] max-h-[780px] bg-white rounded-[24px] shadow-[0_20px_50px_rgba(15,23,42,0.14)] border border-slate-200/80 flex flex-col overflow-hidden relative">
+
+    <!-- ヘッダー（青系グラデーション #1a73e8 〜 #0d47a1） -->
+    <header style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);" class="px-4 py-3.5 text-white flex items-center justify-between shrink-0 shadow-md z-10">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <!-- 左上の白い丸型「＜」戻るボタン（Lessonページのみ表示） -->
+        <button id="backBtn" onclick="goToSlide(0)" title="ホーム（1ページ目）へ戻る"
+          class="hidden w-8 h-8 rounded-full bg-white text-[#0d47a1] hover:bg-blue-50 active:scale-95 transition flex items-center justify-center font-black text-sm shadow-sm shrink-0 cursor-pointer">
+          ＜
+        </button>
+        <h1 id="headerTitle" class="text-[18px] sm:text-[19px] font-bold tracking-tight truncate">
+          まるごとA1リンク
+        </h1>
+      </div>
+    </header>
+
+    <!-- メインコンテンツエリア -->
+    <main id="slideBody" class="flex-1 overflow-y-auto phone-scroll p-4 sm:p-5 bg-[#f8fafc] space-y-5">
+      <!-- JavaScriptで動的に描画 -->
+    </main>
+
+    <!-- 下部スライドナビゲーション（前へ・ページ番号 1/19 〜 19/19・次へ） -->
+    <footer class="bg-white border-t border-slate-200 px-4 py-2.5 flex items-center justify-between shrink-0">
+      <button id="prevBtn" onclick="prevSlide()"
+        class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:pointer-events-none text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer">
+        <i class="fa-solid fa-chevron-left text-[11px]"></i>
+        <span>前へ</span>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <span id="pageIndicator" class="text-xs sm:text-sm font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full tracking-wider">
+          1 / 19
+        </span>
+      </div>
+
+      <button id="nextBtn" onclick="nextSlide()"
+        class="px-3.5 py-1.5 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-40 disabled:pointer-events-none text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+        <span>次へ</span>
+        <i class="fa-solid fa-chevron-right text-[11px]"></i>
+      </button>
+    </footer>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 全18課および漢字クイズのマスターデータ
+    // ==========================================
+    const kanjiQuizzes = [
+      { label: "T3", url: "https://docs.google.com/forms/d/e/1FAIpQLScmTUcizwKbh9qh1AfTcad7Hgofsafq4tIv54UEhNP3viHR0g/viewform?usp=publish-editor" },
+      { label: "T4", url: "https://docs.google.com/forms/d/e/1FAIpQLSf6E60c_1RnDeeRr8zc0t6ZPl0c1xNA2jeVTB-Rqs-LJ-VoHQ/viewform?usp=publish-editor" },
+      { label: "T5", url: "https://docs.google.com/forms/d/e/1FAIpQLSewxl6HFu1lO426kVPwQiadwCDMfDI-G7QKhLdx_xFtu1uXqA/viewform?usp=publish-editor" },
+      { label: "T6", url: "https://docs.google.com/forms/d/e/1FAIpQLSdfP6lX_V_XzohQGJWwmWbEa8lhoej46LS4fzeSGFE1As6XFA/viewform?usp=publish-editor" },
+      { label: "T7", url: "https://docs.google.com/forms/d/e/1FAIpQLScUjOoOeOmVTWAVe2evDhZ-LtJImIcSTZ1rVTC7SJ5hVrJe-A/viewform?usp=publish-editor" },
+      { label: "T8", url: "https://docs.google.com/forms/d/e/1FAIpQLSeMl2LyOgUGBC4a_eAveydvepxuvutgBZd8Ud3OVe5EAl20xg/viewform?usp=publish-editor" },
+      { label: "T9", url: "https://docs.google.com/forms/d/e/1FAIpQLSeX5TZeTRaTpVaYDSnZ40J3mUCMs_a_uFYCbXyCC8EOJYfyzQ/viewform?usp=publish-editor" }
+    ];
+
+    const lessonsData = [
+      {
+        num: 1,
+        sectionLabel: "基礎練習",
+        rikai: "",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSe9x1xXt_Y-tkg4iFD-slkOvwOzGnefog7L8h7aXGU3AMmMIQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644330618/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l1%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: []
+      },
+      {
+        num: 2,
+        sectionLabel: "基礎練習",
+        rikai: "",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSeGkz2oXubZug7pilKa77j5rsFg3aI9AQV4iFQmbKId-exa7w/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644330828/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l2%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: []
+      },
+      {
+        num: 3,
+        sectionLabel: "基礎練習",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSe6c-CPS4k2SeNxSpCgaKUYpjbFaQ-o6kJ1cYfocz2L1ref6A/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSeeCV5WG6iZl3g5_jrg0z3AIRvMfN7RKg5yMHofV5Y8MjPO9w/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644330886/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l3%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson03/sc017_2.mp3",
+            lines: [
+              "キム：はじめまして。キムです。どうぞ よろしく。",
+              "カーラ：カーラです。はじめまして。どうぞ よろしく。",
+              "キム：カーラさん、おしごとは なんですか。",
+              "カーラ：わたしは がくせいです。あのう、キムさんは せんせいですか。",
+              "キム：いいえ、せんせいじゃないです。がくせいです。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson03/sc023_2.mp3",
+            lines: [
+              "のだ：カーラさん、おくには？",
+              "カーラ：フランスです。のださんは フランスごが できますか。",
+              "のだ：いいえ、できません。カーラさんは にほんごが できますか。",
+              "カーラ：はい、すこし できます。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson03/sc028_2.mp3",
+            lines: [
+              "さとう：おしごとは なんですか。",
+              "シン：エンジニアです。",
+              "さとう：そうですか。わたしも エンジニアです。",
+              "シン：そうですか。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 4,
+        sectionLabel: "基礎練習",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSftODxy2bg8lTzvJZNzSpH1QWzXITbUI5TESYFYXe45OaNlug/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSc6NI_ZHSAyvIZOIlB0exF-c8zla_jXpJECzH_l-ZjDGZCwlQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644330951/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l4%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson04/sc037_2.mp3",
+            lines: [
+              "わたしの かぞくは 3にんです。",
+              "ちちと ははと わたしです。",
+              "わたしたちは おおさかに すんでいます。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson04/sc044_2.mp3",
+            lines: [
+              "キム：この おとこのこは だれですか。",
+              "すずき：あにの こどもです。",
+              "キム：かわいいですね。 すずき：4さいです。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 5,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdcsb1l2R1j0wEidFAQ0di7mWb2_JU2WHCo-mL3MLyyjT721Q/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSda_8n0cvWH_NKU9cMDmRSlFgXCD9oedZJQ_0dTlJUDougtGQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644331005/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l5%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645466889/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l5%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson05/sc058_2.mp3",
+            lines: [
+              "ジョイ：たべものは なにが すきですか。",
+              "たなか：肉が すきです。魚も すきです。",
+              "ジョイ：やさいは？",
+              "たなか：やさいは すきじゃないです。",
+              "ジョイ：わたしは 肉と やさいが すきです。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson05/sc061_2.mp3",
+            lines: [
+              "あべ：ホセさんは、いつも あさごはんを たべますか。",
+              "ホセ：はい、 たべます。",
+              "あべ：なにを よく たべますか。",
+              "ホセ：わたしは パンと くだものを よく たべます。",
+              "あべ：卵は？",
+              "ホセ：卵は あまり たべません。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 6,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdPjMO48tfKFjeo-qiQICaMOsPOkuasTbHWx2hf4KPf8tj3bA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSexgPW4OcU0OFRpK_XhAlto2Azm7zQVJYEm7YCJPMNjz_0RCw/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334353/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l6%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645466997/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l6%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson06/sc075_2.mp3",
+            lines: [
+              "よしだ：すきな りょうりは なんですか。",
+              "キム：カレーです。",
+              "よしだ：よく 食べますか。",
+              "キム：はい。しゅうに 2かいぐらい 食べます。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson06/sc077_2.mp3",
+            lines: [
+              "カーラ：きょうは どこで ひるごはんを 食べますか。",
+              "たなか：「いっぽ」で 食べます。いっしょに どうですか。",
+              "カーラ：「いっぽ」？ なんの みせですか。",
+              "たなか：ていしょくやです。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 7,
+        sectionLabel: "基礎練習",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSfVLnuETymCDUtFcZBkR0LhNSYg8snZZxP_3y-bJimukc9w_Q/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSfpu7KG-eyI2S9kBkNC73uY-VgVuspnGJNZ44rMrIjfFv68ow/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334430/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l7%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson07/sc091_2.mp3",
+            lines: [
+              "わたしの いえには エアコンが あります。",
+              "いすが 2つ あります。 テレビは ありません。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson07/sc095_2.mp3",
+            lines: [
+              "わたしの いえは マンションです。 おっとと すんでいます。",
+              "わたしの いえは あかるいです。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 8,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSeBD4C9NBnrEqX8no1cy2rcIUonMIMvDlVOwwWfhSNVIBUDXA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSe2eXjcumN36KOrF6AxxJVswipnLATT6PUt3OOpoRhzAUhRMg/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334482/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l8%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467075/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l8%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson08/sc111_2.mp3",
+            lines: [
+              "カーラ：あべさん、カップは どこですか。",
+              "あべ：ええっと、カップは たなの うえです。とけいの よこです。",
+              "カーラ：あ、ありました。どうも。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson08/sc117_2.mp3",
+            lines: [
+              "A：ごめんください。",
+              "B：いらっしゃい。どうぞ あがって ください。",
+              "A：おじゃまします。",
+              "A：いい へやですね。",
+              "C：どうも ありがとう。",
+              "B：おちゃ、どうぞ。",
+              "A：いただきます。・・・おいしいですね。",
+              "A：これ、なんですか。",
+              "C：かんこくの にんぎょうです。",
+              "A：そうですか。きれいですね。",
+              "A：あのう、トイレは どこですか。",
+              "B：あ、こちらへ どうぞ。",
+              "A：はい、すみません。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 9,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdqZPZiDGtxV6iFF2dMiEfKjH7YZDNrrnQ70MpL32uJcyRAAg/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSdiuZURzomOfb_Xh_PGNGfFCrY_TH20jGKVXEXAGpgo4wni_Q/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334531/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l9%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467153/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l9%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson09/sc124_2.mp3",
+            lines: [
+              "カーラ：にほんは いま あさ 9時ですね。シンさん、インドは いま なんじですか。",
+              "シン：あさ 5時半ですよ。フランスは？",
+              "カーラ：フランスは いま 1時です。ごぜん 1時。",
+              "シン：ふーん、そうですか。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson09/sc130_2.mp3",
+            lines: [
+              "シン：のださんは まいにち なんじに おきますか。",
+              "のだ：5時に おきます。",
+              "シン：はやいですね。",
+              "のだ：ええ。シンさんは？",
+              "シン：わたしは 7時ごろ おきます。",
+              "のだ：そうですか。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 10,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdoKT00-xcdiUWbimAgtkIVO1V5S51UnloaoXqnBnv9Fb_cUg/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSdPu9cTbeYFxnnQNgiDHDbEIyB_aixRRADgXqd9F-FZ9hAj_w/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334581/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l10%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467226/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l10%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson10/sc148_2.mp3",
+            lines: [
+              "シン：",
+              "わたしは 月よう日から 金よう日まで かいしゃに いきます。",
+              "かいしゃは 9時から5時半までです。",
+              "土よう日と 日よう日は いきません。やすみです。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson10/sc154_2.mp3",
+            lines: [
+              "のだ：シンさんの かいしゃは なんじから なんじまでですか。",
+              "シン：9時から ５時半までです。まいにち 7時かんはん しごとを します。",
+              "のだ：ざんぎょうが ありますか。",
+              "シン：はい。ときどき 2じかんぐらい ざんぎょうを します。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson10/sc160_2.mp3",
+            lines: [
+              "キム：らいしゅうの しょくじは いつが いいですか。",
+              "すずき：そうですね。金よう日が いいです。",
+              "キム：じゃあ、なんじが いいですか。",
+              "すずき：金よう日は 6時まで しごとを します。7時は どうですか。",
+              "キム：いいですよ。7時ですね。",
+              "ーーー",
+              "シン：木よう日は どうですか。",
+              "たなか：木よう日は だめです。すみません。",
+              "シン：じゃあ、水よう日は どうですか。",
+              "たなか：水よう日は だいじょうぶです。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 11,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSfSh-E_SrbotG51XTB_lgQhoS40MUvF2rldrZLyzMmNucgXsQ/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSc3IV9xJ6IK7JOGk47ZIBRM034Q9mWSzzydia6tK_Gpkj30EA/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334699/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l11%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467279/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l11%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson11/sc167_2.mp3",
+            lines: [
+              "パク：しゅみは なんですか。",
+              "すずき：どくしょです。",
+              "パク：そうですか。どんな ほんが すきですか。",
+              "すずき：マンガが だいすきです。",
+              "パク：そうですか。わたしもです。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson11/sc172_2.mp3",
+            lines: [
+              "パク：すずきさんは がいこくごが できますか。",
+              "すずき：はい、すこし できます。",
+              "パク：なにが できますか。",
+              "すずき：えいごと かんこくごが できます。",
+              "パク：そうですか。すごいですね！"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson11/sc177_2.mp3",
+            lines: [
+              "あべ：やすみの ひに なにを しますか。",
+              "くの：うちで よく えいがを 見ます。",
+              "あべ：どんな えいがを 見ますか。",
+              "くの：アクションえいがを よく 見ます。コメディも ときどき 見ます。",
+              "あべ：そうですか。ホラーは？",
+              "くの：ホラーは ぜんぜん 見ません。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 12,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdRZB5-Nb5NINFO-DvleaCXKt-NYCCKMgHUwKk116iWizVQsA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSclLDIo51eUAi9DaDVoiogknnIkEgC0B9YreiIKeiq0ehLogg/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334748/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l12%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467344/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l12%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson12/sc191_2.mp3",
+            lines: [
+              "あべ：シンさん、らいげつ すもうが ありますよ。",
+              "シン：え、そうですか。どこで ありますか。",
+              "あべ：23日に こくさいホールで あります。",
+              "シン：あべさん、いきますか。",
+              "あべ：はい、たぶん いきます。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson12/sc194_2.mp3",
+            lines: [
+              "すずき：土よう日に なにを しますか。",
+              "ホセ：ぼんさいコンテストを 見に いきます。",
+              "すずき：そうですか。",
+              "ホセ：いっしょに 見に いきませんか。",
+              "すずき：いいですね。いきましょう。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 13,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSe7fwPuqQBQhVOD3PsXzDnUZkF4Gthv-n24ms_f3CmrJL3KeA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSe6xUswbQ440yijGyEI5J8o_cFEUGqrYXNcjJuCjRg1CerjqQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334808/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l13%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467566/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l13%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson13/sc208_2.mp3",
+            lines: [
+              "リサ：うちから かいしゃまで どうやって いきますか。",
+              "ホセ：わたしは みどりえきまで バスで いきます。そして、さくらえきまで でんしゃで いきます。",
+              "リサ：そうですか。さくらえきから かいしゃまで どうやって いきますか。",
+              "ホセ：あるいて いきます。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson13/sc210_2.mp3",
+            lines: [
+              "たなか：うちから まちまで どうやって いきますか。",
+              "カーラ：わたしは みどりえきまで ちかてつに のります。",
+              "たなか：どこで おりますか。",
+              "カーラ：みやこえきで おります。",
+              "たなか：そうですか。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson13/sc213_2.mp3",
+            lines: [
+              "ジョイ：ここから くうこうまで どうやって いきますか。",
+              "ホテルの ひと：くうこうは でんしゃが いいですよ。はやいですから。",
+              "ジョイ：そうですか。どうも ありがとうございます。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 14,
+        sectionLabel: "基礎練習",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSeaiXV_CeqBGPwnYUh1yhr7CB8bjeTpqNTbAYczeSq_9tE3MA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSc8OiemRr24IQuXy7J11yyyO18Wp8czr_CGmlre4jBIWNEGFw/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334872/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l14%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson14/sc225_2.mp3",
+            lines: [
+              "チョウ：さいたまは どんな まちですか。",
+              "きむら：にぎやかな まちです。",
+              "チョウ：さいたまに なにが ありますか。",
+              "きむら：古い じんしゃが あります。ゆうめいな はくぶつかんも あります。",
+              "チョウ：そうですか。いいですね。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson14/sc228_2.mp3",
+            lines: [
+              "よしだ：もしもし、カーラさん？いま、どこに いますか。",
+              "カーラ：わたしは きっさてんの まえに います。",
+              "よしだ：きっさてんは どこに ありますか。",
+              "カーラ：えきの となりに あります。",
+              "よしだ：あ、わかりました。いま、いきます。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 15,
+        sectionLabel: "基礎練習",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLScSG5TCV_RKYlSEokgGWhaLmzzul4CuF05n1I-YzpBZnt3CzA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLScWREIAM02Tx2c84jHBiOVGvutXQjy7xXgi0FXWo4-f_-Ivbw/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334904/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l15%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson15/sc235_2.mp3",
+            lines: [
+              "すずき：カーラさんは なにが ほしいですか。",
+              "カーラ：アクセサリーが ほしいです。",
+              "すずき：どんな アクセサリーが ほしいですか。",
+              "カーラ：かわいい アクセサリーが ほしいです。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson15/sc241_2.mp3",
+            lines: [
+              "キム：すずきさんは カーラさんの バースデーパーティーに いきますか。",
+              "すずき：はい。",
+              "キム：すずきさんは カーラさんに なにを あげますか。",
+              "すずき：わたしは アクセサリーを あげます。",
+              "キム：アクセサリーですか。いいですね。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson15/sc248_2.mp3",
+            lines: [
+              "たなか：かっこいい とけいですね。",
+              "アニス：ありがとう。きょねん 日本で かいました。",
+              "たなか：この アクセサリーも？",
+              "アニス：え、これ？　ともだちに もらいました。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 16,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdF4vw1UfOwXXRcN0Lo-lG3s6rd9AWzNq1TVSNovZIn0YOLsA/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLScAL3sKusw1lAMSBpKjBzqjl-tW4FYnjcnsR5_1I-EsVc-yHQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334934/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l16%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467664/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l16%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson16/sc261_2.mp3",
+            lines: [
+              "きゃく：すみません。これは いくらですか。",
+              "てんいん：どれですか。",
+              "きゃく：これです。　この スカーフです。",
+              "てんいん：ええと、３，０００円です。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson16/sc267_2.mp3",
+            lines: [
+              "きゃく：すみません。この Tシャツ ほかの いろは ありますか。",
+              "てんいん：はい。あおと くろが あります。",
+              "きゃく：じゃあ、あおを ください。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson16/sc273_2.mp3",
+            lines: [
+              "てんいん：いらっしゃいませ。",
+              "きゃく：すみません。ほかの いろは ありますか。",
+              "てんいん：はい、あります。",
+              "きゃく：きて みても いいですか。",
+              "てんいん：はい、どうぞ。…よく にあいますよ。",
+              "きゃく：じゃあ、これ、ください。",
+              "てんいん：はい。ありがとうございます。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 17,
+        sectionLabel: "基礎練習",
+        rikai: "",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSdtXAeVxRVRjFut7qsQxyceZ0GiPA-SZArj93q9LjVy1hhfeQ/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644334971/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l17%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson17/sc278_2.mp3",
+            lines: [
+              "ヤン：さとうさん、きのう なにを しましたか。",
+              "さとう：新しい デパートに いきました。",
+              "ヤン：そうですか。",
+              "さとう：デパートで 買いものを しました。たのしかったです。",
+              "ヤン：そうですか。デパートは どうでしたか。",
+              "さとう：とても にぎやかでした。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson17/sc289_2.mp3",
+            lines: [
+              "かわい：やすみは どこに いきましたか。",
+              "シン：どこにも いきませんでした。うちで ゆっくりしました。",
+              "かわい：そうですか。わたしも なにも しませんでした。",
+              "シン：それが いちばん いいですね。"
+            ]
+          }
+        ]
+      },
+      {
+        num: 18,
+        sectionLabel: "基礎・漢字",
+        rikai: "https://docs.google.com/forms/d/e/1FAIpQLSdiVP_jF4oRdIa_SWLUiEIEefYCqW3wWCftwYwy5tJbgNSp9w/viewform?usp=publish-editor",
+        fukushu: "https://docs.google.com/forms/d/e/1FAIpQLSfbsQZT-odjNGSMia3Tc0EuwowZrpecphnG4MlsGMHj8GwyJw/viewform?usp=publish-editor",
+        kotoba: "https://quizlet.com/id/644335300/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l18%E3%81%93%E3%81%A8%E3%81%B0-flash-cards/?i=432drq&x=1jqt",
+        kanji: "https://quizlet.com/id/645467727/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l18%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&x=1jqt",
+        convs: [
+          {
+            numLabel: "②",
+            title: "会話②",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson18/sc301_2.mp3",
+            lines: [
+              "のりか：東京は どうでしたか。",
+              "パウロ：たのしかったですよ。ゆうめいな おてらを 見ました。それから、おみやげを 買いました。",
+              "のりか：よかったですね。"
+            ]
+          },
+          {
+            numLabel: "③",
+            title: "会話③",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson18/sc303_2.mp3",
+            lines: [
+              "のりか：東京で なにを 食べましたか。",
+              "パウロ：そばを 食べました。",
+              "のりか：そうですか。どうでしたか。",
+              "パウロ：たいへんでした。　でも、おいしかったです。",
+              "のりか：そうですか。"
+            ]
+          },
+          {
+            numLabel: "④",
+            title: "会話④",
+            audio: "https://marugoto.jpf.go.jp/assets/audio/download/member/starter_c/MarugotoStarterCompetencesMp3Lesson18/sc305_2.mp3",
+            lines: [
+              "すずき：アリさん、日本で 東京タワーに 行きましたか。",
+              "アリ：はい、行きました。",
+              "すずき：そうですか。じゃあ、しんかんせんに のりましたか。",
+              "アリ：いいえ、のりませんでした。",
+              "すずき：そうですか。",
+              "アリ：つぎは しんかんせんに のりたいです。"
+            ]
+          }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // 2. スライド状態管理
+    // ==========================================
+    let currentSlideIndex = 0; // 0: ホーム, 1〜18: Lesson 1〜18
+    const totalSlides = 19;
+    let isEditingBasicUrls = false;
+    let isEditingAudioUrls = false;
+
+    function toggleBasicEditMode() {
+      isEditingBasicUrls = !isEditingBasicUrls;
+      renderSlide();
+    }
+
+    function updateLessonBasicUrl(lessonNum, field, newUrl) {
+      const lesson = lessonsData.find(l => l.num === lessonNum);
+      if (lesson && ["rikai", "fukushu", "kotoba", "kanji"].includes(field)) {
+        lesson[field] = newUrl.trim();
+        renderSlide();
+      }
+    }
+
+    function toggleAudioEditMode() {
+      isEditingAudioUrls = !isEditingAudioUrls;
+      renderSlide();
+    }
+
+    function updateConvAudioUrl(lessonNum, convIndex, newUrl) {
+      const lesson = lessonsData.find(l => l.num === lessonNum);
+      if (lesson && lesson.convs[convIndex]) {
+        lesson.convs[convIndex].audio = newUrl.trim();
+        renderSlide();
+      }
+    }
+
+    // ==========================================
+    // 3. 画面描画（ホーム ＆ 各Lessonページ）
+    // ==========================================
+    function renderSlide() {
+      const bodyEl = document.getElementById("slideBody");
+      const titleEl = document.getElementById("headerTitle");
+      const backBtn = document.getElementById("backBtn");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const indicator = document.getElementById("pageIndicator");
+
+      // ページ番号と前後ボタンの状態更新
+      indicator.textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+      prevBtn.disabled = (currentSlideIndex === 0);
+      nextBtn.disabled = (currentSlideIndex === totalSlides - 1);
+
+      // スクロール位置をトップに戻す
+      bodyEl.scrollTop = 0;
+
+      if (currentSlideIndex === 0) {
+        // 1ページ目：ホーム画面
+        backBtn.classList.add("hidden");
+        titleEl.textContent = "まるごとA1リンク";
+
+        const lessonTilesHtml = lessonsData.map(lesson => `
+          <button onclick="goToSlide(${lesson.num})"
+            class="bg-white hover:bg-[#e8f0fe] active:scale-95 border border-slate-200 hover:border-[#1a73e8] rounded-xl py-3 px-2 text-center shadow-2xs transition cursor-pointer flex flex-col items-center justify-center">
+            <span class="text-[15px] font-extrabold text-[#1a73e8]">L${lesson.num}</span>
+          </button>
+        `).join("");
+
+        const kanjiTilesHtml = kanjiQuizzes.map(item => `
+          <a href="${item.url}" target="_blank" rel="noopener noreferrer"
+            class="bg-[#fef7e0] hover:bg-amber-100 active:scale-95 border border-amber-200 rounded-xl py-2.5 px-2 text-center text-[#b06000] font-extrabold text-sm shadow-2xs transition block">
+            ${item.label}
+          </a>
+        `).join("");
+
+        bodyEl.innerHTML = `
+          <section class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+            <h2 class="text-sm font-bold text-slate-600 mb-3 flex items-center gap-1.5">
+              <span>📖 L1～L18</span>
+            </h2>
+            <div class="grid grid-cols-3 gap-2.5">
+              ${lessonTilesHtml}
+            </div>
+          </section>
+
+          <section class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+            <h2 class="text-sm font-bold text-slate-600 mb-3 flex items-center gap-1.5">
+              <span>📝 漢字クイズA1 (Google Forms)</span>
+            </h2>
+            <div class="grid grid-cols-4 gap-2">
+              ${kanjiTilesHtml}
+            </div>
+          </section>
+
+          <section class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+            <a href="https://quizlet.com/id/645467806/%E3%81%BE%E3%82%8B%E3%81%94%E3%81%A8a1-l5l18%E3%81%8B%E3%82%93%E3%81%98-flash-cards/?i=432drq&amp;x=1jqt" target="_blank" rel="noopener noreferrer"
+              class="bg-[#fef7e0] hover:bg-amber-100 active:scale-98 border border-amber-200 rounded-xl p-3 text-center text-[#b06000] font-extrabold text-sm shadow-2xs transition flex items-center justify-center gap-2">
+              <span class="text-base">📇</span>
+              <span>まるごとA1 L5~18「かんじ」</span>
+            </a>
+          </section>
+        `;
+      } else {
+        // 2〜19ページ目：Lesson 1〜18
+        const lesson = lessonsData[currentSlideIndex - 1];
+        backBtn.classList.remove("hidden");
+        titleEl.textContent = `Lesson ${lesson.num}`;
+
+        // 基礎練習・漢字ボタン群（2列グリッド）
+        let linkButtonsHtml = "";
+        if (lesson.rikai) {
+          linkButtonsHtml += `
+            <a href="${escapeHtml(lesson.rikai)}" target="_blank" rel="noopener noreferrer"
+              class="bg-[#e8f0fe] text-[#1967d2] hover:brightness-95 active:scale-98 rounded-xl p-3 font-bold text-[13px] sm:text-sm flex items-center gap-2 shadow-2xs transition">
+              <span class="text-base shrink-0">📘</span>
+              <span class="truncate">A1L${lesson.num} りかい</span>
+            </a>
+          `;
+        }
+        if (lesson.fukushu) {
+          linkButtonsHtml += `
+            <a href="${escapeHtml(lesson.fukushu)}" target="_blank" rel="noopener noreferrer"
+              class="bg-[#e6f4ea] text-[#137333] hover:brightness-95 active:scale-98 rounded-xl p-3 font-bold text-[13px] sm:text-sm flex items-center gap-2 shadow-2xs transition">
+              <span class="text-base shrink-0">📗</span>
+              <span class="truncate">A1L${lesson.num} りかい復習</span>
+            </a>
+          `;
+        }
+        if (lesson.kotoba) {
+          linkButtonsHtml += `
+            <a href="${escapeHtml(lesson.kotoba)}" target="_blank" rel="noopener noreferrer"
+              class="bg-[#f3e8fd] text-[#7627bb] hover:brightness-95 active:scale-98 rounded-xl p-3 font-bold text-[13px] sm:text-sm flex items-center gap-2 shadow-2xs transition">
+              <span class="text-base shrink-0">📇</span>
+              <span class="truncate">L${lesson.num} ことば</span>
+            </a>
+          `;
+        }
+        if (lesson.kanji) {
+          linkButtonsHtml += `
+            <a href="${escapeHtml(lesson.kanji)}" target="_blank" rel="noopener noreferrer"
+              class="bg-[#fef7e0] text-[#b06000] hover:brightness-95 active:scale-98 rounded-xl p-3 font-bold text-[13px] sm:text-sm flex items-center gap-2 shadow-2xs transition">
+              <span class="text-base shrink-0">📇</span>
+              <span class="truncate">L${lesson.num} かんじ</span>
+            </a>
+          `;
+        }
+
+        const basicEditHtml = isEditingBasicUrls ? `
+          <div class="mt-2.5 bg-white rounded-xl p-3 border border-slate-200/90 shadow-2xs space-y-2.5">
+            <p class="text-[11px] font-bold text-slate-500">各URL（空欄にするとボタン非表示／編集後「HTML保存」で永続化）</p>
+            <div>
+              <label class="block text-[11px] font-bold text-[#1967d2] mb-0.5">📘 A1L${lesson.num} りかい URL</label>
+              <input type="url" value="${escapeHtml(lesson.rikai || "")}"
+                onchange="updateLessonBasicUrl(${lesson.num}, 'rikai', this.value)"
+                placeholder="https://docs.google.com/forms/..."
+                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:border-[#1a73e8] focus:outline-none text-slate-700" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-[#137333] mb-0.5">📗 A1L${lesson.num} りかい復習 URL</label>
+              <input type="url" value="${escapeHtml(lesson.fukushu || "")}"
+                onchange="updateLessonBasicUrl(${lesson.num}, 'fukushu', this.value)"
+                placeholder="https://docs.google.com/forms/..."
+                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:border-[#1a73e8] focus:outline-none text-slate-700" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-[#7627bb] mb-0.5">📇 L${lesson.num} ことば URL</label>
+              <input type="url" value="${escapeHtml(lesson.kotoba || "")}"
+                onchange="updateLessonBasicUrl(${lesson.num}, 'kotoba', this.value)"
+                placeholder="https://quizlet.com/..."
+                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:border-[#1a73e8] focus:outline-none text-slate-700" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-[#b06000] mb-0.5">📇 L${lesson.num} かんじ URL</label>
+              <input type="url" value="${escapeHtml(lesson.kanji || "")}"
+                onchange="updateLessonBasicUrl(${lesson.num}, 'kanji', this.value)"
+                placeholder="https://quizlet.com/..."
+                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:border-[#1a73e8] focus:outline-none text-slate-700" />
+            </div>
+          </div>
+        ` : "";
+
+        // シャドーイングセクション
+        let shadowingSectionHtml = "";
+        if (lesson.convs && lesson.convs.length > 0) {
+          const convCardsHtml = lesson.convs.map((conv, idx) => {
+            const linesHtml = conv.lines.map(line => `<p class="mb-1 last:mb-0">${escapeHtml(line)}</p>`).join("");
+            const audioUrl = conv.audio ? escapeHtml(conv.audio) : "";
+
+            const audioControlsHtml = audioUrl ? `
+              <a href="${audioUrl}" target="_blank" rel="noopener noreferrer"
+                class="bg-[#fef08a] hover:bg-amber-200 active:scale-95 text-[#ca8a04] font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition shrink-0 shadow-2xs">
+                <i class="fa-solid fa-link text-[11px]"></i>
+                <span>${conv.numLabel} 音声リンク</span>
+              </a>
+            ` : `
+              <span class="bg-slate-100 text-slate-400 font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-link-slash text-[11px]"></i>
+                <span>URL未設定</span>
+              </span>
+            `;
+
+            const editInputHtml = isEditingAudioUrls ? `
+              <div class="mt-2.5 pt-2.5 border-t border-slate-100">
+                <label class="block text-[11px] font-bold text-slate-500 mb-1">${conv.title} 音声URL</label>
+                <input type="url" value="${audioUrl}"
+                  onchange="updateConvAudioUrl(${lesson.num}, ${idx}, this.value)"
+                  placeholder="https://marugoto.jpf.go.jp/...mp3"
+                  class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:border-[#1a73e8] focus:outline-none text-slate-700" />
+              </div>
+            ` : "";
+
+            return `
+              <div class="bg-white rounded-xl p-3.5 border border-slate-200/90 shadow-2xs">
+                <div class="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-slate-100">
+                  <span class="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md shrink-0">
+                    ${conv.title}
+                  </span>
+                  ${audioControlsHtml}
+                </div>
+                <div class="text-[13px] sm:text-[13.5px] text-slate-800 leading-relaxed font-medium">
+                  ${linesHtml}
+                </div>
+                ${editInputHtml}
+              </div>
+            `;
+          }).join("");
+
+          shadowingSectionHtml = `
+            <section>
+              <div class="flex items-center justify-between mb-2.5 px-0.5">
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  シャドーイング
+                </h2>
+                <button type="button" onclick="toggleAudioEditMode()"
+                  class="text-[11px] font-bold px-2 py-0.5 rounded-md border ${isEditingAudioUrls ? 'bg-[#1a73e8] text-white border-[#1a73e8]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'} transition cursor-pointer">
+                  ${isEditingAudioUrls ? '✓ 編集完了' : '✎ 音声URL編集'}
+                </button>
+              </div>
+              <div class="space-y-3">
+                ${convCardsHtml}
+              </div>
+            </section>
+          `;
+        }
+
+        bodyEl.innerHTML = `
+          <section>
+            <div class="flex items-center justify-between mb-2.5 px-0.5">
+              <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                まるごとA1
+              </h2>
+              <button type="button" onclick="toggleBasicEditMode()"
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md border ${isEditingBasicUrls ? 'bg-[#1a73e8] text-white border-[#1a73e8]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'} transition cursor-pointer">
+                ${isEditingBasicUrls ? '✓ 編集完了' : '✎ URL編集'}
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              ${linkButtonsHtml}
+            </div>
+            ${basicEditHtml}
+          </section>
+          ${shadowingSectionHtml}
+        `;
+      }
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // ==========================================
+    // 4. スライド切り替え・キーボード操作
+    // ==========================================
+    function goToSlide(index) {
+      if (index < 0 || index >= totalSlides) return;
+      currentSlideIndex = index;
+      renderSlide();
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        goToSlide(currentSlideIndex - 1);
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < totalSlides - 1) {
+        goToSlide(currentSlideIndex + 1);
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      // 入力要素にフォーカスがある場合はスキップ
+      if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+      if (e.key === "ArrowLeft") {
+        prevSlide();
+      } else if (e.key === "ArrowRight") {
+        nextSlide();
+      }
+    });
+
+    // ==========================================
+    // 5. 単一HTMLファイルとしての直接ダウンロード機能
+    // ==========================================
+    function downloadSelfHtml() {
+      try {
+        // 編集中のlessonsDataもスクリプト内に反映した状態でHTMLを生成
+        const docClone = document.documentElement.cloneNode(true);
+        const clonedBody = docClone.querySelector("#slideBody");
+        if (clonedBody) clonedBody.innerHTML = "";
+        const clonedBackBtn = docClone.querySelector("#backBtn");
+        if (clonedBackBtn) clonedBackBtn.classList.add("hidden");
+        const clonedTitle = docClone.querySelector("#headerTitle");
+        if (clonedTitle) clonedTitle.textContent = "まるごとA1リンク";
+        const clonedIndicator = docClone.querySelector("#pageIndicator");
+        if (clonedIndicator) clonedIndicator.textContent = "1 / 19";
+
+        // 編集されたlessonsDataをインラインスクリプトに書き戻す
+        const scripts = docClone.querySelectorAll("script");
+        scripts.forEach(sc => {
+          if (sc.textContent.includes("const lessonsData =")) {
+            sc.textContent = sc.textContent.replace(
+              /const lessonsData = \[[\s\S]*?\n    \];/,
+              `const lessonsData = ${JSON.stringify(lessonsData, null, 6)};`
+            );
+          }
+        });
+
+        const htmlContent = "<!DOCTYPE html>\n" + docClone.outerHTML;
+        const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "marugoto_a1_app.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error("HTMLの保存に失敗しました:", err);
+      }
+    }
+
+    // 初期表示
+    window.addEventListener("DOMContentLoaded", () => {
+      renderSlide();
+    });
+  </script>
+</body>
+</html>
